@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shiraz Student Information Portal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #667eea; --primary-dark: #5a67d8; --secondary: #764ba2;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --info: #3b82f6;
+            --dark: #1e293b; --light: #f8fafc; --gray: #64748b;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 50%, #ddd6fe 100%);
+            min-height: 100vh; color: var(--dark);
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white; padding: 30px; border-radius: 20px; margin-bottom: 25px;
+            text-align: center; box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+            position: relative; overflow: hidden;
+        }
+        header::before {
+            content: ''; position: absolute; top: -50%; right: -20%;
+            width: 400px; height: 400px; background: rgba(255,255,255,0.1); border-radius: 50%;
+        }
+        header h1 { font-size: 2.2rem; margin-bottom: 8px; position: relative; }
+        header p { opacity: 0.9; font-size: 1.05rem; position: relative; }
+        .mode-switcher {
+            display: flex; justify-content: center; gap: 10px; margin-bottom: 25px;
+            background: white; padding: 8px; border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); max-width: 600px;
+            margin-left: auto; margin-right: auto;
+        }
+        .mode-btn {
+            padding: 12px 28px; border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            transition: all 0.3s ease; background: transparent; color: var(--gray);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .mode-btn:hover:not(.active) { background: #f1f5f9; color: var(--dark); }
+        .card {
+            background: white; border-radius: 20px; padding: 28px; margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid rgba(226, 232, 240, 0.8);
+            transition: all 0.3s ease;
+        }
+        .card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.1); transform: translateY(-2px); }
+        .card-title {
+            font-size: 1.25rem; font-weight: 700; color: var(--dark); margin-bottom: 20px;
+            display: flex; align-items: center; gap: 10px; padding-bottom: 12px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .card-title .icon { font-size: 1.4rem; }
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white; padding: 20px; border-radius: 16px; text-align: center;
+            position: relative; overflow: hidden;
+        }
+        .stat-card::after {
+            content: ''; position: absolute; bottom: -20px; right: -20px;
+            width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%;
+        }
+        .stat-card h3 { font-size: 2rem; margin-bottom: 5px; }
+        .stat-card p { font-size: 0.85rem; opacity: 0.9; }
+        .stat-card.warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .stat-card.danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .stat-card.success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .stat-card.info { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+        .form-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin-bottom: 20px;
+        }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label {
+            font-size: 0.85rem; font-weight: 600; color: var(--gray); margin-bottom: 8px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px;
+            font-size: 1rem; transition: all 0.3s ease; background: #fafbfc;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: var(--primary); background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        .form-group input::placeholder { color: #cbd5e1; }
+        .form-group .hint { font-size: 0.75rem; color: var(--gray); margin-top: 5px; }
+        .btn {
+            padding: 14px 28px; border: none; border-radius: 12px; font-size: 1rem;
+            font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+            display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+        }
+        .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4); }
+        .btn-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4); }
+        .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
+        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4); }
+        .btn-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4); }
+        .btn-info { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; }
+        .btn-info:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4); }
+        .btn-sm { padding: 8px 16px; font-size: 0.85rem; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .search-bar {
+            display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .search-bar input {
+            flex: 1; min-width: 250px; padding: 14px 20px; border: 2px solid #e2e8f0;
+            border-radius: 12px; font-size: 1rem; transition: all 0.3s ease;
+        }
+        .search-bar input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1); }
+        .filters { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        .filters select {
+            padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px;
+            font-size: 0.95rem; background: white; cursor: pointer; min-width: 180px;
+        }
+        .table-wrapper { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        thead { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); }
+        th { padding: 16px; text-align: left; font-weight: 700; color: var(--gray); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
+        td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        tbody tr { transition: all 0.2s ease; }
+        tbody tr:hover { background: #f8fafc; }
+        tbody tr:last-child td { border-bottom: none; }
+        .badge { padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; display: inline-block; white-space: nowrap; }
+        .badge-active { background: #d1fae5; color: #065f46; }
+        .badge-expired { background: #fee2e2; color: #991b1b; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-info { background: #dbeafe; color: #1e40af; }
+        .badge-gray { background: #f1f5f9; color: #475569; }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--gray); }
+        .empty-state .icon { font-size: 4rem; margin-bottom: 15px; opacity: 0.5; }
+        .empty-state h3 { font-size: 1.3rem; margin-bottom: 8px; color: var(--dark); }
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000;
+            justify-content: center; align-items: center; padding: 20px; animation: fadeIn 0.2s ease;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white; border-radius: 20px; padding: 32px; max-width: 600px;
+            width: 100%; max-height: 90vh; overflow-y: auto;
+            animation: slideUp 0.3s ease; box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #f1f5f9; }
+        .modal-header h2 { font-size: 1.4rem; color: var(--dark); }
+        .close-btn { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: var(--gray); transition: color 0.3s; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
+        .close-btn:hover { color: var(--danger); background: #fee2e2; }
+        .notification {
+            position: fixed; top: 20px; right: 20px; padding: 16px 24px; border-radius: 14px;
+            color: white; font-weight: 600; z-index: 2000; transform: translateX(500px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-width: 400px;
+        }
+        .notification.show { transform: translateX(0); }
+        .notification.success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .notification.error { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .notification.info { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #f1f5f9; padding: 6px; border-radius: 12px; overflow-x: auto; }
+        .tab { padding: 10px 20px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; background: transparent; color: var(--gray); transition: all 0.3s ease; white-space: nowrap; }
+        .tab.active { background: white; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .tab:hover:not(.active) { color: var(--dark); }
+        .batch-textarea { width: 100%; min-height: 200px; padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-family: 'Consolas', monospace; font-size: 0.9rem; resize: vertical; background: #fafbfc; }
+        .batch-textarea:focus { outline: none; border-color: var(--primary); background: white; }
+        .batch-preview { margin-top: 20px; max-height: 300px; overflow-y: auto; }
+        .portal-intro {
+            background: linear-gradient(135deg, #dbeafe 0%, #c7d2fe 100%);
+            padding: 30px; border-radius: 16px; margin-bottom: 25px; text-align: center;
+        }
+        .portal-intro h2 { color: #1e3a5f; margin-bottom: 10px; }
+        .portal-intro p { color: #475569; }
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.6rem; }
+            .form-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .mode-switcher { flex-direction: column; }
+            table { font-size: 0.8rem; }
+            th, td { padding: 10px; }
+        }
+        .action-btns { display: flex; gap: 6px; flex-wrap: nowrap; }
+        .action-btns .btn { padding: 6px 12px; font-size: 0.8rem; }
+        .highlight-row { background: #fef3c7 !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏥 Shiraz Student Information Portal</h1>
+            <p>Shiraz University of Medical Sciences — Indian Student Database</p>
+        </header>
+        <div class="mode-switcher">
+            <button class="mode-btn active" onclick="switchMode('admin')" id="btn-admin">
+                <span>🔐</span> Admin Dashboard
+            </button>
+            <button class="mode-btn" onclick="switchMode('student')" id="btn-student">
+                <span>👤</span> Student Self-Entry
+            </button>
+            <button class="mode-btn" onclick="switchMode('batch')" id="btn-batch">
+                <span>📋</span> Batch Entry
+            </button>
+        </div>
+        <!-- ==================== ADMIN DASHBOARD ==================== -->
+        <div id="section-admin" class="section active">
+            <div class="card">
+                <div class="card-title"><span class="icon">📊</span> Dashboard Overview</div>
+                <div class="stats-grid">
+                    <div class="stat-card"><h3 id="stat-total">0</h3><p>Total Students</p></div>
+                    <div class="stat-card success"><h3 id="stat-active">0</h3><p>Active Passport</p></div>
+                    <div class="stat-card warning"><h3 id="stat-expiring">0</h3><p>Expiring Soon</p></div>
+                    <div class="stat-card danger"><h3 id="stat-expired">0</h3><p>Expired Passport</p></div>
+                    <div class="stat-card info"><h3 id="stat-residency">0</h3><p>Residency Updated</p></div>
+                    <div class="stat-card"><h3 id="stat-batch">0</h3><p>Batch Assigned</p></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title"><span class="icon">🔍</span> Search & Filter</div>
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="🔍 Search by name, mobile, passport, domicile, batch..." onkeypress="if(event.key==='Enter')searchStudents()">
+                    <button class="btn btn-primary" onclick="searchStudents()">Search</button>
+                    <button class="btn btn-warning" onclick="clearSearch()">Reset</button>
+                </div>
+                <div class="filters">
+                    <select id="filterDomicile" onchange="applyFilters()"><option value="">All Domiciles</option></select>
+                    <select id="filterStatus" onchange="applyFilters()">
+                        <option value="">All Status</option>
+                        <option value="active">Active Passport</option>
+                        <option value="expiring">Expiring Soon</option>
+                        <option value="expired">Expired</option>
+                        <option value="no-residency">No Residency Date</option>
+                    </select>
+                    <select id="filterBatch" onchange="applyFilters()"><option value="">All Batches</option></select>
+                    <button class="btn btn-info btn-sm" onclick="exportToCSV()">📥 Export CSV</button>
+                    <button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ Clear All</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title"><span class="icon">➕</span> Add New Student</div>
+                <form id="addStudentForm" onsubmit="handleAddStudent(event)">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Full Name *</label><input type="text" id="addName" placeholder="Enter full name" required></div>
+                        <div class="form-group"><label>Mobile Number *</label><input type="tel" id="addMobile" placeholder="e.g. 09173857061" required></div>
+                        <div class="form-group"><label>Passport Number *</label><input type="text" id="addPassport" placeholder="e.g. U4351838" required></div>
+                        <div class="form-group"><label>Passport Expiry Date *</label><input type="date" id="addPassportExpiry" required></div>
+                        <div class="form-group"><label>Residency Expiry Date</label><input type="date" id="addResidencyExpiry"><span class="hint">When does your Iranian residency expire?</span></div>
+                        <div class="form-group"><label>Date of Birth</label><input type="date" id="addDOB"></div>
+                        <div class="form-group"><label>Email</label><input type="email" id="addEmail" placeholder="student@email.com"></div>
+                        <div class="form-group"><label>University</label><input type="text" id="addUniversity" value="Shiraz University of Medical Sciences"></div>
+                        <div class="form-group"><label>Domicile in India</label><input type="text" id="addDomicile" placeholder="e.g. J&K, Maharashtra"></div>
+                        <div class="form-group"><label>Batch</label><input type="text" id="addBatch" placeholder="e.g. 2024, MBBS-2023"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">💾 Save Student Record</button>
+                </form>
+            </div>
+            <div class="card">
+                <div class="card-title"><span class="icon">📋</span> Student Records</div>
+                <div id="studentsTableContainer"></div>
+            </div>
+        </div>
+        <!-- ==================== STUDENT SELF-ENTRY ==================== -->
+        <div id="section-student" class="section">
+            <div class="portal-intro">
+                <h2>👋 Welcome, Student!</h2>
+                <p>Use this portal to add or update your Residency Expiry Date and Batch information. Your passport details are already in our system.</p>
+            </div>
+            <div class="card">
+                <div class="card-title"><span class="icon">🔍</span> Find Your Record</div>
+                <div class="search-bar">
+                    <input type="text" id="studentSearchInput" placeholder="Enter your name or passport number to find your record..." onkeypress="if(event.key==='Enter')findStudentRecord()">
+                    <button class="btn btn-primary" onclick="findStudentRecord()">Find My Record</button>
+                </div>
+                <div id="studentSearchResults"></div>
+            </div>
+            <div class="card">
+                <div class="card-title"><span class="icon">📝</span> New Student Registration</div>
+                <p style="margin-bottom:15px;color:var(--gray);">Cannot find your record? Register yourself here with your Residency Expiry and Batch info.</p>
+                <form id="selfRegisterForm" onsubmit="handleSelfRegister(event)">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Full Name *</label><input type="text" id="selfName" placeholder="Your full name" required></div>
+                        <div class="form-group"><label>Mobile Number *</label><input type="tel" id="selfMobile" placeholder="Your Iranian mobile number" required></div>
+                        <div class="form-group"><label>Passport Number *</label><input type="text" id="selfPassport" placeholder="Your Indian passport number" required></div>
+                        <div class="form-group"><label>Passport Expiry Date *</label><input type="date" id="selfPassportExpiry" required></div>
+                        <div class="form-group"><label>Residency Expiry Date *</label><input type="date" id="selfResidencyExpiry" required><span class="hint">When does your Iranian residency card expire?</span></div>
+                        <div class="form-group"><label>Date of Birth</label><input type="date" id="selfDOB"></div>
+                        <div class="form-group"><label>Email</label><input type="email" id="selfEmail" placeholder="your@email.com"></div>
+                        <div class="form-group"><label>Domicile in India *</label><input type="text" id="selfDomicile" placeholder="e.g. J&K, Delhi" required></div>
+                        <div class="form-group"><label>Batch *</label><input type="text" id="selfBatch" placeholder="e.g. MBBS-2024" required><span class="hint">Your academic batch or year</span></div>
+                    </div>
+                    <button type="submit" class="btn btn-success">✅ Register My Information</button>
+                </form>
+            </div>
+        </div>
+        <!-- ==================== BATCH ENTRY ==================== -->
+        <div id="section-batch" class="section">
+            <div class="card">
+                <div class="card-title"><span class="icon">📋</span> Batch Entry (Bulk Import)</div>
+                <p style="margin-bottom:15px;color:var(--gray);">Paste multiple student records at once. Use one of these formats:</p>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchBatchTab('csv')">CSV Format</button>
+                    <button class="tab" onclick="switchBatchTab('table')">Table Format</button>
+                </div>
+                <div id="batch-csv" class="batch-tab-content">
+                    <p style="margin-bottom:10px;font-size:0.9rem;color:var(--gray);">
+                        Format: <code>Name, Mobile, Passport, PassportExpiry, ResidencyExpiry, DOB, Domicile, Batch</code><br>
+                        One student per line. Dates in YYYY-MM-DD format.
+                    </p>
+                    <textarea class="batch-textarea" id="batchCSV" placeholder="Aalia Fatima,09173857061,U4351838,2030-02-10,2026-12-31,2003-09-09,Maharashtra,MBBS-2024
+Aameen Qureshi,9389372934,T2386280,2029-06-18,2026-11-30,2002-06-23,J&K,MBBS-2024"></textarea>
+                </div>
+                <div id="batch-table" class="batch-tab-content" style="display:none;">
+                    <p style="margin-bottom:10px;font-size:0.9rem;color:var(--gray);">
+                        Paste tab-separated data (copied from Excel). First row can be headers.
+                    </p>
+                    <textarea class="batch-textarea" id="batchTable" placeholder="Name&#x09;Mobile&#x09;Passport&#x09;PassportExpiry&#x09;ResidencyExpiry&#x09;DOB&#x09;Domicile&#x09;Batch
+Aalia Fatima&#x09;09173857061&#x09;U4351838&#x09;2030-02-10&#x09;2026-12-31&#x09;2003-09-09&#x09;Maharashtra&#x09;MBBS-2024"></textarea>
+                </div>
+                <div class="btn-group" style="margin-top:15px;">
+                    <button class="btn btn-primary" onclick="previewBatch()">👁️ Preview</button>
+                    <button class="btn btn-success" onclick="importBatch()">📥 Import All</button>
+                    <button class="btn btn-warning" onclick="clearBatch()">🔄 Clear</button>
+                </div>
+                <div class="batch-preview" id="batchPreview"></div>
+            </div>
+        </div>
+    </div>
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header"><h2>✏️ Edit Student Record</h2><button class="close-btn" onclick="closeEditModal()">&times;</button></div>
+            <form id="editStudentForm" onsubmit="handleEditStudent(event)">
+                <input type="hidden" id="editId">
+                <div class="form-grid">
+                    <div class="form-group"><label>Full Name *</label><input type="text" id="editName" required></div>
+                    <div class="form-group"><label>Mobile Number *</label><input type="tel" id="editMobile" required></div>
+                    <div class="form-group"><label>Passport Number *</label><input type="text" id="editPassport" required></div>
+                    <div class="form-group"><label>Passport Expiry Date *</label><input type="date" id="editPassportExpiry" required></div>
+                    <div class="form-group"><label>Residency Expiry Date</label><input type="date" id="editResidencyExpiry"></div>
+                    <div class="form-group"><label>Date of Birth</label><input type="date" id="editDOB"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="editEmail"></div>
+                    <div class="form-group"><label>University</label><input type="text" id="editUniversity"></div>
+                    <div class="form-group"><label>Domicile in India</label><input type="text" id="editDomicile"></div>
+                    <div class="form-group"><label>Batch</label><input type="text" id="editBatch"></div>
+                </div>
+                <button type="submit" class="btn btn-success">💾 Update Record</button>
+            </form>
+        </div>
+    </div>
+    <!-- Student Update Modal -->
+    <div class="modal-overlay" id="updateModal">
+        <div class="modal">
+            <div class="modal-header"><h2>📝 Update Your Information</h2><button class="close-btn" onclick="closeUpdateModal()">&times;</button></div>
+            <form id="updateStudentForm" onsubmit="handleStudentUpdate(event)">
+                <input type="hidden" id="updateId">
+                <div style="margin-bottom:20px;padding:15px;background:#f8fafc;border-radius:12px;">
+                    <p><strong>Name:</strong> <span id="updateDisplayName"></span></p>
+                    <p><strong>Passport:</strong> <span id="updateDisplayPassport"></span></p>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Residency Expiry Date *</label><input type="date" id="updateResidencyExpiry" required><span class="hint">When does your Iranian residency card expire?</span></div>
+                    <div class="form-group"><label>Batch *</label><input type="text" id="updateBatch" placeholder="e.g. MBBS-2024" required><span class="hint">Your academic batch or year</span></div>
+                    <div class="form-group"><label>Mobile Number</label><input type="tel" id="updateMobile"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="updateEmail"></div>
+                </div>
+                <button type="submit" class="btn btn-success">✅ Save My Updates</button>
+            </form>
+        </div>
+    </div>
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+    <script>
+        const INITIAL_DATA = [{"id": "STU-0001", "name": "Aalia Fatima Sayyed Aslam Ali", "mobile": "09173857061", "passportExpiry": "2030-02-10", "residencyExpiry": "", "email": "", "studentID": "U4351838", "course": "Shiraz University of Medical Sciences", "domicile": "Maharashtra", "dob": "2003-09-09", "batch": "", "source": "imported"}, {"id": "STU-0002", "name": "Aameen Qureshi", "mobile": "9389372934", "passportExpiry": "2029-06-18", "residencyExpiry": "", "email": "", "studentID": "T2386280", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-06-23", "batch": "", "source": "imported"}, {"id": "STU-0003", "name": "Aaquib Mohammad Bhat", "mobile": "9059363054", "passportExpiry": "2033-08-20", "residencyExpiry": "", "email": "", "studentID": "X9964634", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-10-07", "batch": "", "source": "imported"}, {"id": "STU-0004", "name": "Aayat zehra syed", "mobile": "9051243216", "passportExpiry": "2033-11-12", "residencyExpiry": "", "email": "", "studentID": "Y8872539", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-08-11", "batch": "", "source": "imported"}, {"id": "STU-0005", "name": "Abdul Hanan Zargar", "mobile": "09033308363", "passportExpiry": "2032-03-21", "residencyExpiry": "", "email": "", "studentID": "V1687552", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-09-28", "batch": "", "source": "imported"}, {"id": "STU-0006", "name": "Abdul Muiz Mirza", "mobile": "09054747593", "passportExpiry": "2033-08-01", "residencyExpiry": "", "email": "", "studentID": "X9962239", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-03-27", "batch": "", "source": "imported"}, {"id": "STU-0007", "name": "Abdullah bin Shokat", "mobile": "9010302347", "passportExpiry": "2033-12-19", "residencyExpiry": "", "email": "", "studentID": "B6559506", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-07-10", "batch": "", "source": "imported"}, {"id": "STU-0008", "name": "Adeelah Ibrahim", "mobile": "9929512158", "passportExpiry": "2034-04-15", "residencyExpiry": "", "email": "", "studentID": "Y1078748", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-08-02", "batch": "", "source": "imported"}, {"id": "STU-0009", "name": "Afreen Tahir Khan", "mobile": "09044528799", "passportExpiry": "2028-02-08", "residencyExpiry": "", "email": "", "studentID": "R8999813", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-10-08", "batch": "", "source": "imported"}, {"id": "STU-0010", "name": "Ahtisham Ul Haq Syeed", "mobile": "9058343464", "passportExpiry": "2033-07-20", "residencyExpiry": "", "email": "", "studentID": "X9959644", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-02-06", "batch": "", "source": "imported"}, {"id": "STU-0011", "name": "Aidah Jan", "mobile": "09046850733", "passportExpiry": "2033-07-31", "residencyExpiry": "", "email": "", "studentID": "X9961874", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-06-23", "batch": "", "source": "imported"}, {"id": "STU-0012", "name": "Aina jan", "mobile": "09046427058", "passportExpiry": "2031-10-10", "residencyExpiry": "", "email": "", "studentID": "V0959651", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-04-23", "batch": "", "source": "imported"}, {"id": "STU-0013", "name": "Aisha muzafar", "mobile": "9046377087", "passportExpiry": "2032-07-19", "residencyExpiry": "", "email": "", "studentID": "V8694517", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-09-05", "batch": "", "source": "imported"}, {"id": "STU-0014", "name": "Aishia Fayaz", "mobile": "9330744358", "passportExpiry": "2032-07-12", "residencyExpiry": "", "email": "", "studentID": "V8695604", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-06-19", "batch": "", "source": "imported"}, {"id": "STU-0015", "name": "Aiza Ellahi", "mobile": "09051543548", "passportExpiry": "2034-06-27", "residencyExpiry": "", "email": "", "studentID": "Y3381075", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2006-01-02", "batch": "", "source": "imported"}, {"id": "STU-0016", "name": "Ali Bhat", "mobile": "9059364811", "passportExpiry": "2032-08-24", "residencyExpiry": "", "email": "", "studentID": "V8705756", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-02-15", "batch": "", "source": "imported"}, {"id": "STU-0017", "name": "Aliya", "mobile": "9175934213", "passportExpiry": "2034-01-22", "residencyExpiry": "", "email": "", "studentID": "Y9627283", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-09-29", "batch": "", "source": "imported"}, {"id": "STU-0018", "name": "Aliza Zahoor", "mobile": "9363187522", "passportExpiry": "2031-06-08", "residencyExpiry": "", "email": "", "studentID": "U9403461", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-02-23", "batch": "", "source": "imported"}, {"id": "STU-0019", "name": "Aly Azam Mir", "mobile": "09055878766", "passportExpiry": "2034-04-03", "residencyExpiry": "", "email": "", "studentID": "Y1384502", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-09-08", "batch": "", "source": "imported"}, {"id": "STU-0020", "name": "Ana Anjum", "mobile": "09045517086", "passportExpiry": "2032-10-31", "residencyExpiry": "", "email": "", "studentID": "W5566032", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-03-09", "batch": "", "source": "imported"}, {"id": "STU-0021", "name": "Anber Naseer", "mobile": "09389398953", "passportExpiry": "2035-06-12", "residencyExpiry": "", "email": "", "studentID": "AB660394", "course": "Shiraz University of Medical Sciences", "domicile": "Kerala", "dob": "2006-03-20", "batch": "", "source": "imported"}, {"id": "STU-0022", "name": "Anees Manzoor", "mobile": "09388750807", "passportExpiry": "2030-08-17", "residencyExpiry": "", "email": "", "studentID": "U7605240", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-11-21", "batch": "", "source": "imported"}, {"id": "STU-0023", "name": "Anha Sameer", "mobile": "989991091564", "passportExpiry": "2035-01-27", "residencyExpiry": "", "email": "", "studentID": "C6897452", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2006-07-05", "batch": "", "source": "imported"}, {"id": "STU-0024", "name": "Areeba Niyaz", "mobile": "9045640453", "passportExpiry": "2031-04-21", "residencyExpiry": "", "email": "", "studentID": "U9401554", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-03-16", "batch": "", "source": "imported"}, {"id": "STU-0025", "name": "Areebah", "mobile": "9172147192", "passportExpiry": "2030-08-12", "residencyExpiry": "", "email": "", "studentID": "Z6000888", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-10-21", "batch": "", "source": "imported"}, {"id": "STU-0026", "name": "Areebah Aisha", "mobile": "9172147192", "passportExpiry": "2030-08-12", "residencyExpiry": "", "email": "", "studentID": "Z6000888", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-10-21", "batch": "", "source": "imported"}, {"id": "STU-0027", "name": "Areeka Farooq", "mobile": "09339677298", "passportExpiry": "2031-11-22", "residencyExpiry": "", "email": "", "studentID": "V0963466", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-07-08", "batch": "", "source": "imported"}, {"id": "STU-0028", "name": "Aroojah Jan Jalali", "mobile": "9379388957", "passportExpiry": "2031-09-09", "residencyExpiry": "", "email": "", "studentID": "V0958604", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-06-06", "batch": "", "source": "imported"}, {"id": "STU-0029", "name": "Arosa nisar", "mobile": "09034842301", "passportExpiry": "2030-02-19", "residencyExpiry": "", "email": "", "studentID": "U7125209", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2000-10-21", "batch": "", "source": "imported"}, {"id": "STU-0030", "name": "Arsh Zehra", "mobile": "09935027552", "passportExpiry": "2034-07-17", "residencyExpiry": "", "email": "", "studentID": "Y4937769", "course": "Shiraz University of Medical Sciences", "domicile": "Uttar Pradesh", "dob": "2005-07-31", "batch": "", "source": "imported"}, {"id": "STU-0031", "name": "Asra Fida Qadri", "mobile": "09389305182", "passportExpiry": "2030-12-07", "residencyExpiry": "", "email": "", "studentID": "U3577137", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-09-25", "batch": "", "source": "imported"}, {"id": "STU-0032", "name": "Auqib Nabi Dar", "mobile": "09015446303", "passportExpiry": "2030-12-10", "residencyExpiry": "", "email": "", "studentID": "U3575623", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-04-06", "batch": "", "source": "imported"}, {"id": "STU-0033", "name": "Ayaz Ahmad", "mobile": "09010301938", "passportExpiry": "2034-08-12", "residencyExpiry": "", "email": "", "studentID": "C0419036", "course": "Shiraz University of Medical Sciences", "domicile": "Uttar Pradesh", "dob": "2001-04-25", "batch": "", "source": "imported"}, {"id": "STU-0034", "name": "Azmat Akbar", "mobile": "9010304277", "passportExpiry": "2034-01-31", "residencyExpiry": "", "email": "", "studentID": "X3041745", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2006-04-05", "batch": "", "source": "imported"}, {"id": "STU-0035", "name": "BALASHWETA BALAMURUGAN", "mobile": "09399154497", "passportExpiry": "2029-05-09", "residencyExpiry": "", "email": "", "studentID": "T5948410", "course": "Shiraz University of Medical Sciences", "domicile": "TAMIL NADU", "dob": "2001-07-15", "batch": "", "source": "imported"}, {"id": "STU-0036", "name": "BASAR IMTIYAZ KHAN", "mobile": "9331216906", "passportExpiry": "2031-07-04", "residencyExpiry": "", "email": "", "studentID": "U9538611", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-07-10", "batch": "", "source": "imported"}, {"id": "STU-0037", "name": "Basharat Ahad Mir", "mobile": "9057660605", "passportExpiry": "2029-05-22", "residencyExpiry": "", "email": "", "studentID": "T0887033", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-08-31", "batch": "", "source": "imported"}, {"id": "STU-0038", "name": "Bazilah fayaz", "mobile": "09179636891", "passportExpiry": "2031-12-02", "residencyExpiry": "", "email": "", "studentID": "V0962086", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-04-05", "batch": "", "source": "imported"}, {"id": "STU-0039", "name": "Daania Tariq", "mobile": "9044127197", "passportExpiry": "2033-06-06", "residencyExpiry": "", "email": "", "studentID": "W9084326", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-03-04", "batch": "", "source": "imported"}, {"id": "STU-0040", "name": "Ereeba Javeed", "mobile": "9170313903", "passportExpiry": "2035-04-21", "residencyExpiry": "", "email": "", "studentID": "I0143681", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-06-30", "batch": "", "source": "imported"}, {"id": "STU-0041", "name": "Faiqa Ashiq", "mobile": "9391290508", "passportExpiry": "2032-09-25", "residencyExpiry": "", "email": "", "studentID": "W5557763", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-09-18", "batch": "", "source": "imported"}, {"id": "STU-0042", "name": "Faisal Bhat", "mobile": "9389376432", "passportExpiry": "2030-12-30", "residencyExpiry": "", "email": "", "studentID": "U3574968", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-04-13", "batch": "", "source": "imported"}, {"id": "STU-0043", "name": "Faiz Khan.", "mobile": "9059313471", "passportExpiry": "2032-02-27", "residencyExpiry": "", "email": "", "studentID": "V1680629", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-04-30", "batch": "", "source": "imported"}, {"id": "STU-0044", "name": "Falak Fayaz", "mobile": "9927825287", "passportExpiry": "2034-05-07", "residencyExpiry": "", "email": "", "studentID": "Y1073499", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-06-02", "batch": "", "source": "imported"}, {"id": "STU-0045", "name": "Fazilah fayaz maknoo", "mobile": "09010435600", "passportExpiry": "2032-10-02", "residencyExpiry": "", "email": "", "studentID": "Z6780168", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-09-04", "batch": "", "source": "imported"}, {"id": "STU-0046", "name": "Fiza Jan", "mobile": "9046574472", "passportExpiry": "2032-01-06", "residencyExpiry": "", "email": "", "studentID": "V1200685", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-12-09", "batch": "", "source": "imported"}, {"id": "STU-0047", "name": "Hafsah Tanvir", "mobile": "09046995631", "passportExpiry": "2032-06-28", "residencyExpiry": "", "email": "", "studentID": "V8270007", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-06-17", "batch": "", "source": "imported"}, {"id": "STU-0048", "name": "Haleen Hussain", "mobile": "09046177081", "passportExpiry": "2032-07-21", "residencyExpiry": "", "email": "", "studentID": "V8696870", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-07-14", "batch": "", "source": "imported"}, {"id": "STU-0049", "name": "Hamad Javeed", "mobile": "09339934093", "passportExpiry": "2031-12-06", "residencyExpiry": "", "email": "", "studentID": "V0964482", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-02-23", "batch": "", "source": "imported"}, {"id": "STU-0050", "name": "Hayam mushtaq wani", "mobile": "9010307291", "passportExpiry": "2034-05-15", "residencyExpiry": "", "email": "", "studentID": "Y1082876", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2006-01-03", "batch": "", "source": "imported"}, {"id": "STU-0051", "name": "Henaz mudasir", "mobile": "9044973227", "passportExpiry": "2033-09-04", "residencyExpiry": "", "email": "", "studentID": "X9968921", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-06-30", "batch": "", "source": "imported"}, {"id": "STU-0052", "name": "Hinna Reyaz", "mobile": "9179837226", "passportExpiry": "2031-02-10", "residencyExpiry": "", "email": "", "studentID": "U2962636", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-06-20", "batch": "", "source": "imported"}, {"id": "STU-0053", "name": "Huda Firdous Khan", "mobile": "9389370358", "passportExpiry": "2030-10-18", "residencyExpiry": "", "email": "", "studentID": "U3572963", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-09-26", "batch": "", "source": "imported"}, {"id": "STU-0054", "name": "Huda sheraz", "mobile": "9369224880", "passportExpiry": "2032-02-14", "residencyExpiry": "", "email": "", "studentID": "V1683243", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-10-12", "batch": "", "source": "imported"}, {"id": "STU-0055", "name": "Humma jan", "mobile": "9375615060", "passportExpiry": "2030-09-23", "residencyExpiry": "", "email": "", "studentID": "U7609902", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-06-05", "batch": "", "source": "imported"}, {"id": "STU-0056", "name": "Ibtisam Nabi", "mobile": "9361223418", "passportExpiry": "2030-06-07", "residencyExpiry": "", "email": "", "studentID": "U4851037", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-10-23", "batch": "", "source": "imported"}, {"id": "STU-0057", "name": "Iffat Amin", "mobile": "09379387596", "passportExpiry": "2030-04-27", "residencyExpiry": "", "email": "", "studentID": "Z6000813", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2001-06-28", "batch": "", "source": "imported"}, {"id": "STU-0058", "name": "Ifrah fatima", "mobile": "9389338631", "passportExpiry": "2031-10-03", "residencyExpiry": "", "email": "", "studentID": "V0959431", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2000-09-08", "batch": "", "source": "imported"}, {"id": "STU-0059", "name": "Insha Asrar", "mobile": "09933989290", "passportExpiry": "2032-01-02", "residencyExpiry": "", "email": "", "studentID": "V1196431", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-05-20", "batch": "", "source": "imported"}, {"id": "STU-0060", "name": "Insha latief", "mobile": "09389398953", "passportExpiry": "2030-05-11", "residencyExpiry": "", "email": "", "studentID": "U4853749", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-10-09", "batch": "", "source": "imported"}, {"id": "STU-0061", "name": "Iqra bashir", "mobile": "09044745728", "passportExpiry": "2033-07-10", "residencyExpiry": "", "email": "", "studentID": "W9126752", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-05-04", "batch": "", "source": "imported"}, {"id": "STU-0062", "name": "Iqra jan", "mobile": "9170969429", "passportExpiry": "2034-08-27", "residencyExpiry": "", "email": "", "studentID": "C0237445", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-12-14", "batch": "", "source": "imported"}, {"id": "STU-0063", "name": "Irtika Gul", "mobile": "09045713852", "passportExpiry": "2033-08-07", "residencyExpiry": "", "email": "", "studentID": "X9964260", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-06-11", "batch": "", "source": "imported"}, {"id": "STU-0064", "name": "Jasir Majeed", "mobile": "09017495166", "passportExpiry": "2035-05-22", "residencyExpiry": "", "email": "", "studentID": "Z8312762", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-09-15", "batch": "", "source": "imported"}, {"id": "STU-0065", "name": "Jeeza khan", "mobile": "09046477953", "passportExpiry": "2033-08-01", "residencyExpiry": "", "email": "", "studentID": "X9962339", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-10-18", "batch": "", "source": "imported"}, {"id": "STU-0066", "name": "Kareena Jan Jalali", "mobile": "09019327799", "passportExpiry": "2026-02-10", "residencyExpiry": "", "email": "", "studentID": "v0957799", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-12-29", "batch": "", "source": "imported"}, {"id": "STU-0067", "name": "Khayra khan", "mobile": "09010208238", "passportExpiry": "2034-05-14", "residencyExpiry": "", "email": "", "studentID": "Y1082584", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-11-18", "batch": "", "source": "imported"}, {"id": "STU-0068", "name": "Lone Suhani Bashir", "mobile": "09046959772", "passportExpiry": "2031-06-02", "residencyExpiry": "", "email": "", "studentID": "U9403149", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "1998-12-09", "batch": "", "source": "imported"}, {"id": "STU-0069", "name": "Madeehah Ashraf", "mobile": "09179267582", "passportExpiry": "2031-12-28", "residencyExpiry": "", "email": "", "studentID": "V1200186", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-08-23", "batch": "", "source": "imported"}, {"id": "STU-0070", "name": "Madiha rouf tramboo", "mobile": "9010412456", "passportExpiry": "2031-03-09", "residencyExpiry": "", "email": "", "studentID": "U2965009", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-08-20", "batch": "", "source": "imported"}, {"id": "STU-0071", "name": "Magray Irtiqa", "mobile": "9339697574", "passportExpiry": "2032-02-02", "residencyExpiry": "", "email": "", "studentID": "V1682735", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-09-21", "batch": "", "source": "imported"}, {"id": "STU-0072", "name": "Mahnoosh fatima", "mobile": "9170283873", "passportExpiry": "2035-07-06", "residencyExpiry": "", "email": "", "studentID": "AD425549", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2007-02-01", "batch": "", "source": "imported"}, {"id": "STU-0073", "name": "Mahrukh tariq", "mobile": "9389399856", "passportExpiry": "2030-12-08", "residencyExpiry": "", "email": "", "studentID": "U3577516", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-08-09", "batch": "", "source": "imported"}, {"id": "STU-0074", "name": "Malik Asif khursheed", "mobile": "09379386179", "passportExpiry": "2031-11-02", "residencyExpiry": "", "email": "", "studentID": "V0960344", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-10-12", "batch": "", "source": "imported"}, {"id": "STU-0075", "name": "Mariya lateef", "mobile": "9170670531", "passportExpiry": "2035-05-29", "residencyExpiry": "", "email": "", "studentID": "AA414983", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-01-24", "batch": "", "source": "imported"}, {"id": "STU-0076", "name": "Mir Moin", "mobile": "9045239609", "passportExpiry": "2029-07-22", "residencyExpiry": "", "email": "", "studentID": "T2392215", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-09-18", "batch": "", "source": "imported"}, {"id": "STU-0077", "name": "MIR MYMANA", "mobile": "9030011804", "passportExpiry": "2034-05-13", "residencyExpiry": "", "email": "", "studentID": "Y1074664", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-04-01", "batch": "", "source": "imported"}, {"id": "STU-0078", "name": "Mir Snober Farooq", "mobile": "9046073422", "passportExpiry": "2031-11-23", "residencyExpiry": "", "email": "", "studentID": "V0961124", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-08-28", "batch": "", "source": "imported"}, {"id": "STU-0079", "name": "Mirza Mesam Abbas Beigh", "mobile": "9339934093", "passportExpiry": "2034-07-07", "residencyExpiry": "", "email": "", "studentID": "Y3375625", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-05-01", "batch": "", "source": "imported"}, {"id": "STU-0080", "name": "Misbah Shireen", "mobile": "9030814921", "passportExpiry": "2031-06-15", "residencyExpiry": "", "email": "", "studentID": "U9534709", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-06-14", "batch": "", "source": "imported"}, {"id": "STU-0081", "name": "Mohammad aqib mir", "mobile": "9045195364", "passportExpiry": "2031-12-15", "residencyExpiry": "", "email": "", "studentID": "V1199639", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-05-20", "batch": "", "source": "imported"}, {"id": "STU-0082", "name": "Mohammad Asif Ul Haq", "mobile": "9306029989", "passportExpiry": "2032-09-07", "residencyExpiry": "", "email": "", "studentID": "V8707023", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-05-15", "batch": "", "source": "imported"}, {"id": "STU-0083", "name": "Mohammad Huzaifah Mir", "mobile": "09967159405", "passportExpiry": "2035-05-21", "residencyExpiry": "", "email": "", "studentID": "I0045397", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2007-06-01", "batch": "", "source": "imported"}, {"id": "STU-0084", "name": "Mohammad Kashif Nengroo", "mobile": "09389378155", "passportExpiry": "2030-06-28", "residencyExpiry": "", "email": "", "studentID": "U4856367", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-05-11", "batch": "", "source": "imported"}, {"id": "STU-0085", "name": "Mohammad Mohsin Hassan", "mobile": "09044625517", "passportExpiry": "2033-08-03", "residencyExpiry": "", "email": "", "studentID": "X9962880", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2006-06-15", "batch": "", "source": "imported"}, {"id": "STU-0086", "name": "mohammad momin sheikh", "mobile": "09058055905", "passportExpiry": "2033-06-05", "residencyExpiry": "", "email": "", "studentID": "W9084068", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-09-30", "batch": "", "source": "imported"}, {"id": "STU-0087", "name": "Mohammad Waiz Bhat", "mobile": "09057598575", "passportExpiry": "2033-08-21", "residencyExpiry": "", "email": "", "studentID": "X9964833", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-06-12", "batch": "", "source": "imported"}, {"id": "STU-0088", "name": "Mohammed Momin Rafiqui", "mobile": "09389370289", "passportExpiry": "2031-07-12", "residencyExpiry": "", "email": "", "studentID": "U9539304", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-10-07", "batch": "", "source": "imported"}, {"id": "STU-0089", "name": "Mohmad Ehsan Dar", "mobile": "09177545762", "passportExpiry": "2032-09-18", "residencyExpiry": "", "email": "", "studentID": "W5557187", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-11-04", "batch": "", "source": "imported"}, {"id": "STU-0090", "name": "Mohsin Altaf Bhat", "mobile": "09991912198", "passportExpiry": "2034-02-02", "residencyExpiry": "", "email": "", "studentID": "X3029442", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-03-02", "batch": "", "source": "imported"}, {"id": "STU-0091", "name": "Moiza bashir", "mobile": "09304436556", "passportExpiry": "2034-07-07", "residencyExpiry": "", "email": "", "studentID": "Y3382787", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2006-08-12", "batch": "", "source": "imported"}, {"id": "STU-0092", "name": "Mubashir Rafiq", "mobile": "09991585354", "passportExpiry": "2033-10-30", "residencyExpiry": "", "email": "", "studentID": "Y5174823", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-03-08", "batch": "", "source": "imported"}, {"id": "STU-0093", "name": "Muhammad Suhaib Wani", "mobile": "09991236424", "passportExpiry": "2035-04-24", "residencyExpiry": "", "email": "", "studentID": "I0503179", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2006-05-28", "batch": "", "source": "imported"}, {"id": "STU-0094", "name": "Mukadas Binte Ashraf", "mobile": "9399284724", "passportExpiry": "2031-04-14", "residencyExpiry": "", "email": "", "studentID": "U2968542", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2001-07-06", "batch": "", "source": "imported"}, {"id": "STU-0095", "name": "Muntazim Aslam Malik", "mobile": "09991919453", "passportExpiry": "2031-10-05", "residencyExpiry": "", "email": "", "studentID": "V0957873", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-05-29", "batch": "", "source": "imported"}, {"id": "STU-0096", "name": "Nafeez ul zaffar", "mobile": "09991535566", "passportExpiry": "2029-03-21", "residencyExpiry": "", "email": "", "studentID": "s92432850", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2001-11-01", "batch": "", "source": "imported"}, {"id": "STU-0097", "name": "Nahad Nazir", "mobile": "9050292684", "passportExpiry": "2031-01-03", "residencyExpiry": "", "email": "", "studentID": "U3578733", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-10-25", "batch": "", "source": "imported"}, {"id": "STU-0098", "name": "Naima Mir", "mobile": "9379383596", "passportExpiry": "2030-11-02", "residencyExpiry": "", "email": "", "studentID": "U3573969", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-02-05", "batch": "", "source": "imported"}, {"id": "STU-0099", "name": "Nazar Abbas.", "mobile": "9033389371", "passportExpiry": "2034-06-10", "residencyExpiry": "", "email": "", "studentID": "Y3373382", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-06-13", "batch": "", "source": "imported"}, {"id": "STU-0100", "name": "Nehal Mushtaq Sofi", "mobile": "09332109609", "passportExpiry": "2029-01-31", "residencyExpiry": "", "email": "", "studentID": "S9421628", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2000-03-16", "batch": "", "source": "imported"}, {"id": "STU-0101", "name": "Nida altaf bhat", "mobile": "9389378531", "passportExpiry": "2031-01-24", "residencyExpiry": "", "email": "", "studentID": "U7612016", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-09-04", "batch": "", "source": "imported"}, {"id": "STU-0102", "name": "Noor muntaha", "mobile": "9045831645", "passportExpiry": "2033-08-20", "residencyExpiry": "", "email": "", "studentID": "X9964584", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-02-25", "batch": "", "source": "imported"}, {"id": "STU-0103", "name": "Nuha Iqbal", "mobile": "09991969681", "passportExpiry": "2034-05-07", "residencyExpiry": "", "email": "", "studentID": "Y1073332", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-03-06", "batch": "", "source": "imported"}, {"id": "STU-0104", "name": "Numa javaid", "mobile": "09338470605", "passportExpiry": "2032-01-26", "residencyExpiry": "", "email": "", "studentID": "V1202411", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-08-08", "batch": "", "source": "imported"}, {"id": "STU-0105", "name": "Nusibah Binti Muzzafar", "mobile": "09300372397", "passportExpiry": "2028-05-14", "residencyExpiry": "", "email": "", "studentID": "S1165844", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2001-05-18", "batch": "", "source": "imported"}, {"id": "STU-0106", "name": "Nusibah Binti Muzzafar", "mobile": "9300372397", "passportExpiry": "2028-05-14", "residencyExpiry": "", "email": "", "studentID": "S1165844", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2001-05-18", "batch": "", "source": "imported"}, {"id": "STU-0107", "name": "Owais ahmad najar", "mobile": "9379339179", "passportExpiry": "2030-11-30", "residencyExpiry": "", "email": "", "studentID": "U3574654", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2001-02-05", "batch": "", "source": "imported"}, {"id": "STU-0108", "name": "Owais Javaid Rather", "mobile": "09301536506", "passportExpiry": "2034-06-06", "residencyExpiry": "", "email": "", "studentID": "1089007", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-11-11", "batch": "", "source": "imported"}, {"id": "STU-0109", "name": "Qudsia shakeel", "mobile": "9305349792", "passportExpiry": "2034-09-18", "residencyExpiry": "", "email": "", "studentID": "C2551705", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2006-08-01", "batch": "", "source": "imported"}, {"id": "STU-0110", "name": "Quershia Kashi", "mobile": "9395084916", "passportExpiry": "2026-08-28", "residencyExpiry": "", "email": "", "studentID": "N9860101", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "1997-06-09", "batch": "", "source": "imported"}, {"id": "STU-0111", "name": "Rabiya Khan", "mobile": "09179693014", "passportExpiry": "2031-05-04", "residencyExpiry": "", "email": "", "studentID": "U9402391", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-07-13", "batch": "", "source": "imported"}, {"id": "STU-0112", "name": "Raveeda Arshad", "mobile": "09338242336", "passportExpiry": "2034-06-19", "residencyExpiry": "", "email": "", "studentID": "Y3378820", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-07-05", "batch": "", "source": "imported"}, {"id": "STU-0113", "name": "Riba shakeel", "mobile": "9045932914", "passportExpiry": "2031-12-06", "residencyExpiry": "", "email": "", "studentID": "V0964311", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-07-25", "batch": "", "source": "imported"}, {"id": "STU-0114", "name": "Rimsha Naqvi", "mobile": "09991785508", "passportExpiry": "2034-07-01", "residencyExpiry": "", "email": "", "studentID": "Y4204808", "course": "Shiraz University of Medical Sciences", "domicile": "Uttar Pradesh", "dob": "2006-07-29", "batch": "", "source": "imported"}, {"id": "STU-0115", "name": "Riyaan Bilqees", "mobile": "09030547357", "passportExpiry": "2030-11-26", "residencyExpiry": "", "email": "", "studentID": "Z6001145", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-12-15", "batch": "", "source": "imported"}, {"id": "STU-0116", "name": "Rutba Arjumand Khan", "mobile": "09179603204", "passportExpiry": "2033-05-24", "residencyExpiry": "", "email": "", "studentID": "W9117462", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-05-17", "batch": "", "source": "imported"}, {"id": "STU-0117", "name": "Saaya ibrahim", "mobile": "09389322708", "passportExpiry": "2029-07-09", "residencyExpiry": "", "email": "", "studentID": "T2390128", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "1997-03-01", "batch": "", "source": "imported"}, {"id": "STU-0118", "name": "Sadaf altaf bhat", "mobile": "09030734294", "passportExpiry": "2034-01-04", "residencyExpiry": "", "email": "", "studentID": "Y9620373", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2006-03-02", "batch": "", "source": "imported"}, {"id": "STU-0119", "name": "Sadaf Khursheed", "mobile": "09934150419", "passportExpiry": "2035-06-30", "residencyExpiry": "", "email": "", "studentID": "AD424250", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-12-15", "batch": "", "source": "imported"}, {"id": "STU-0120", "name": "Sadiya Rafiquee", "mobile": "09051249633", "passportExpiry": "2031-09-15", "residencyExpiry": "", "email": "", "studentID": "U9543609", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-06-30", "batch": "", "source": "imported"}, {"id": "STU-0121", "name": "Salik Hasnain", "mobile": "09178846526", "passportExpiry": "2032-04-12", "residencyExpiry": "", "email": "", "studentID": "V8263553", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-09-15", "batch": "", "source": "imported"}, {"id": "STU-0122", "name": "Salik nisar", "mobile": "9387864712", "passportExpiry": "2030-11-25", "residencyExpiry": "", "email": "", "studentID": "U3571356", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2001-10-25", "batch": "", "source": "imported"}, {"id": "STU-0123", "name": "Saliyah lateef", "mobile": "9170339467", "passportExpiry": "2035-03-20", "residencyExpiry": "", "email": "", "studentID": "C9540631", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-05-03", "batch": "", "source": "imported"}, {"id": "STU-0124", "name": "Saniye Zainab", "mobile": "9010204732", "passportExpiry": "2033-09-25", "residencyExpiry": "", "email": "", "studentID": "Y5176440", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-02-28", "batch": "", "source": "imported"}, {"id": "STU-0125", "name": "Sawaira Fayaz", "mobile": "9389309577", "passportExpiry": "2031-10-28", "residencyExpiry": "", "email": "", "studentID": "V0960068", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-02-11", "batch": "", "source": "imported"}, {"id": "STU-0126", "name": "Sebtayn Saeed", "mobile": "9305463112", "passportExpiry": "2032-05-25", "residencyExpiry": "", "email": "", "studentID": "V8267521", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-01-21", "batch": "", "source": "imported"}, {"id": "STU-0127", "name": "Seerat Jan", "mobile": "09389316106", "passportExpiry": "2031-02-23", "residencyExpiry": "", "email": "", "studentID": "U2963639", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-03-23", "batch": "", "source": "imported"}, {"id": "STU-0128", "name": "Seerat Lateef", "mobile": "09045517084", "passportExpiry": "2032-07-18", "residencyExpiry": "", "email": "", "studentID": "V8696387", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-08-24", "batch": "", "source": "imported"}, {"id": "STU-0129", "name": "Sehreeba Nissar", "mobile": "9379387385", "passportExpiry": "2031-01-14", "residencyExpiry": "", "email": "", "studentID": "U7611634", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-04-29", "batch": "", "source": "imported"}, {"id": "STU-0130", "name": "Sehrish", "mobile": "09050185237", "passportExpiry": "2032-05-16", "residencyExpiry": "", "email": "", "studentID": "W0537648", "course": "Shiraz University of Medical Sciences", "domicile": "Uttarpradesh", "dob": "2003-11-02", "batch": "", "source": "imported"}, {"id": "STU-0131", "name": "Shabih Zehra", "mobile": "9389304103", "passportExpiry": "2030-12-09", "residencyExpiry": "", "email": "", "studentID": "U3421913", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-02-01", "batch": "", "source": "imported"}, {"id": "STU-0132", "name": "Shahid Farooq", "mobile": "09337866378", "passportExpiry": "2033-02-14", "residencyExpiry": "", "email": "", "studentID": "W9097271", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-11-10", "batch": "", "source": "imported"}, {"id": "STU-0133", "name": "Shahwar Shabir Bhat", "mobile": "09046771768", "passportExpiry": "2033-08-16", "residencyExpiry": "", "email": "", "studentID": "X9963905", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-09-24", "batch": "", "source": "imported"}, {"id": "STU-0134", "name": "Shaika shafi", "mobile": "09927205268", "passportExpiry": "2034-07-25", "residencyExpiry": "", "email": "", "studentID": "C0228316", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-11-11", "batch": "", "source": "imported"}, {"id": "STU-0135", "name": "Shakir Nabi", "mobile": "09339599917", "passportExpiry": "2032-01-06", "residencyExpiry": "", "email": "", "studentID": "V1197140", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-08-25", "batch": "", "source": "imported"}, {"id": "STU-0136", "name": "Sharequa", "mobile": "09059533919", "passportExpiry": "2032-09-18", "residencyExpiry": "", "email": "", "studentID": "W4820798", "course": "Shiraz University of Medical Sciences", "domicile": "Meerut, Uttar Pradesh", "dob": "2003-12-06", "batch": "", "source": "imported"}, {"id": "STU-0137", "name": "Shariq Jeelani", "mobile": "9033754905", "passportExpiry": "2032-09-27", "residencyExpiry": "", "email": "", "studentID": "W5557790", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-09-09", "batch": "", "source": "imported"}, {"id": "STU-0138", "name": "Sheikh taameen ayub", "mobile": "09379389784", "passportExpiry": "2031-01-13", "residencyExpiry": "", "email": "", "studentID": "U2960684", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-10-18", "batch": "", "source": "imported"}, {"id": "STU-0139", "name": "Shujat nazir", "mobile": "09339936303", "passportExpiry": "2029-08-11", "residencyExpiry": "", "email": "", "studentID": "T3474641", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-01-29", "batch": "", "source": "imported"}, {"id": "STU-0140", "name": "Sinduss showkat khan", "mobile": "9046628154", "passportExpiry": "2029-07-29", "residencyExpiry": "", "email": "", "studentID": "T2393473", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-07-18", "batch": "", "source": "imported"}, {"id": "STU-0141", "name": "Snober shafi", "mobile": "09389397034", "passportExpiry": "2027-06-27", "residencyExpiry": "", "email": "", "studentID": "U9537927", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-02-17", "batch": "", "source": "imported"}, {"id": "STU-0142", "name": "Sobiya Shabir Wani", "mobile": "9389397761", "passportExpiry": "2031-04-14", "residencyExpiry": "", "email": "", "studentID": "U2968555", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2001-05-11", "batch": "", "source": "imported"}, {"id": "STU-0143", "name": "Subiya Ayoub Bhat", "mobile": "9389336544", "passportExpiry": "2030-12-08", "residencyExpiry": "", "email": "", "studentID": "U3575583", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2001-03-25", "batch": "", "source": "imported"}, {"id": "STU-0144", "name": "Suhaib Tariq mir", "mobile": "9059515516", "passportExpiry": "2033-03-07", "residencyExpiry": "", "email": "", "studentID": "W9103245", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-10-15", "batch": "", "source": "imported"}, {"id": "STU-0145", "name": "Syed Aamina", "mobile": "9044740893", "passportExpiry": "2032-07-17", "residencyExpiry": "", "email": "", "studentID": "V8694229", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-08-18", "batch": "", "source": "imported"}, {"id": "STU-0146", "name": "Syed Mohammad Ather Hussain Rafiquee", "mobile": "09044607319", "passportExpiry": "2032-05-05", "residencyExpiry": "", "email": "", "studentID": "V1690092", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-08-24", "batch": "", "source": "imported"}, {"id": "STU-0147", "name": "Syed Mohammad Hadeed", "mobile": "09045122816", "passportExpiry": "2032-08-24", "residencyExpiry": "", "email": "", "studentID": "V8705770", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-12-13", "batch": "", "source": "imported"}, {"id": "STU-0148", "name": "Syed Mohammad kifayat ullah Andrabi", "mobile": "09379387482", "passportExpiry": "2031-06-02", "residencyExpiry": "", "email": "", "studentID": "U9403221", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-02-15", "batch": "", "source": "imported"}, {"id": "STU-0149", "name": "Syed Mohammad Murtaza", "mobile": "9930431623", "passportExpiry": "2035-07-31", "residencyExpiry": "", "email": "", "studentID": "AD432298", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-09-01", "batch": "", "source": "imported"}, {"id": "STU-0150", "name": "Syed Mohsina Mushtaq", "mobile": "9360699392", "passportExpiry": "2035-08-31", "residencyExpiry": "", "email": "", "studentID": "AD437368", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2007-06-23", "batch": "", "source": "imported"}, {"id": "STU-0151", "name": "Syed Shabar Mohammad Zaidi", "mobile": "09379385796", "passportExpiry": "2029-09-05", "residencyExpiry": "", "email": "", "studentID": "T3473225", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2001-07-10", "batch": "", "source": "imported"}, {"id": "STU-0152", "name": "Syed Zain ul abidin bukhari", "mobile": "9385530984", "passportExpiry": "2033-08-20", "residencyExpiry": "", "email": "", "studentID": "X9964635", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-07-25", "batch": "", "source": "imported"}, {"id": "STU-0153", "name": "Syeda Sadaf Mehdi", "mobile": "09389322768", "passportExpiry": "2029-03-31", "residencyExpiry": "", "email": "", "studentID": "T3200360", "course": "Shiraz University of Medical Sciences", "domicile": "Gurgaon, Haryana", "dob": "2002-08-15", "batch": "", "source": "imported"}, {"id": "STU-0154", "name": "Taban Nisar Yatoo", "mobile": "09387904344", "passportExpiry": "2027-09-13", "residencyExpiry": "", "email": "", "studentID": "R3979798", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-06-01", "batch": "", "source": "imported"}, {"id": "STU-0155", "name": "Tabinda yaseen", "mobile": "09389373164", "passportExpiry": "2031-06-01", "residencyExpiry": "", "email": "", "studentID": "Z6134417", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-11-05", "batch": "", "source": "imported"}, {"id": "STU-0156", "name": "Tahatash Tabassum", "mobile": "09051747434", "passportExpiry": "2033-07-26", "residencyExpiry": "", "email": "", "studentID": "Y7227714", "course": "Shiraz University of Medical Sciences", "domicile": "West bengal", "dob": "2002-03-25", "batch": "", "source": "imported"}, {"id": "STU-0157", "name": "Tahir Hussain", "mobile": "09032523113", "passportExpiry": "2034-07-14", "residencyExpiry": "", "email": "", "studentID": "Y4682562", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-09-08", "batch": "", "source": "imported"}, {"id": "STU-0158", "name": "Tahreem Shabnam", "mobile": "9015746303", "passportExpiry": "2029-02-02", "residencyExpiry": "", "email": "", "studentID": "T2474915", "course": "Shiraz University of Medical Sciences", "domicile": "Delhi", "dob": "2001-09-10", "batch": "", "source": "imported"}, {"id": "STU-0159", "name": "Talib Ashraf", "mobile": "09937144877", "passportExpiry": "2035-01-05", "residencyExpiry": "", "email": "", "studentID": "C6892703", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-01-13", "batch": "", "source": "imported"}, {"id": "STU-0160", "name": "Talish Latif Naik", "mobile": "9374086241", "passportExpiry": "2032-01-06", "residencyExpiry": "", "email": "", "studentID": "V1197141", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2002-04-27", "batch": "", "source": "imported"}, {"id": "STU-0161", "name": "Tazeem Sarfaraz", "mobile": "9029795202", "passportExpiry": "2035-05-15", "residencyExpiry": "", "email": "", "studentID": "I0041759", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2006-10-16", "batch": "", "source": "imported"}, {"id": "STU-0162", "name": "UBAIDULLAH", "mobile": "09389372856", "passportExpiry": "2031-02-11", "residencyExpiry": "", "email": "", "studentID": "U2963796", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-10-08", "batch": "", "source": "imported"}, {"id": "STU-0163", "name": "Ufaq fayaz", "mobile": "9967517786", "passportExpiry": "2034-11-11", "residencyExpiry": "", "email": "", "studentID": "C3633985", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-02-06", "batch": "", "source": "imported"}, {"id": "STU-0164", "name": "Umar farooq", "mobile": "9939834899", "passportExpiry": "2033-10-13", "residencyExpiry": "", "email": "", "studentID": "Y5174023", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-02-15", "batch": "", "source": "imported"}, {"id": "STU-0165", "name": "Urfan Hussain", "mobile": "9397503919", "passportExpiry": "2033-08-17", "residencyExpiry": "", "email": "", "studentID": "Z6777120", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-07-14", "batch": "", "source": "imported"}, {"id": "STU-0166", "name": "Wasfiya Imtiyaz Ganie", "mobile": "9389398273", "passportExpiry": "2030-10-28", "residencyExpiry": "", "email": "", "studentID": "U3570651", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2001-05-21", "batch": "", "source": "imported"}, {"id": "STU-0167", "name": "Wasif Sheikh", "mobile": "09055303075", "passportExpiry": "2032-09-06", "residencyExpiry": "", "email": "", "studentID": "W5555265", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-06-25", "batch": "", "source": "imported"}, {"id": "STU-0168", "name": "Wasiq Ali", "mobile": "09170527551", "passportExpiry": "2032-06-28", "residencyExpiry": "", "email": "", "studentID": "V8270117", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-11-09", "batch": "", "source": "imported"}, {"id": "STU-0169", "name": "Yusra Batool", "mobile": "9053959188", "passportExpiry": "2035-09-23", "residencyExpiry": "", "email": "", "studentID": "AH208588", "course": "Shiraz University of Medical Sciences", "domicile": "Uttar Pradesh", "dob": "2005-04-10", "batch": "", "source": "imported"}, {"id": "STU-0170", "name": "Zaheer Hussain Mohammadi", "mobile": "09991089438", "passportExpiry": "2035-08-20", "residencyExpiry": "", "email": "", "studentID": "AD435288", "course": "Shiraz University of Medical Sciences", "domicile": "Kargil, Ladakh", "dob": "2007-06-28", "batch": "", "source": "imported"}, {"id": "STU-0171", "name": "Zaid Irshad", "mobile": "09389391723", "passportExpiry": "2030-03-15", "residencyExpiry": "", "email": "", "studentID": "U7131684", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-07-10", "batch": "", "source": "imported"}, {"id": "STU-0172", "name": "Zainab Moosvi", "mobile": "9033353098", "passportExpiry": "2032-05-26", "residencyExpiry": "", "email": "", "studentID": "V8271475", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2004-11-04", "batch": "", "source": "imported"}, {"id": "STU-0173", "name": "Zehra yousuf", "mobile": "9379385374", "passportExpiry": "2030-10-11", "residencyExpiry": "", "email": "", "studentID": "V0957982", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2003-04-15", "batch": "", "source": "imported"}, {"id": "STU-0174", "name": "Zobea Zehra Syed", "mobile": "09171072991", "passportExpiry": "2034-09-19", "residencyExpiry": "", "email": "", "studentID": "C2553357", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2006-06-04", "batch": "", "source": "imported"}, {"id": "STU-0175", "name": "Zufishan Beigh", "mobile": "9170598993", "passportExpiry": "2034-03-13", "residencyExpiry": "", "email": "", "studentID": "X3033649", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "2005-05-08", "batch": "", "source": "imported"}, {"id": "STU-0176", "name": "Zulkifal Hussain", "mobile": "9036589712", "passportExpiry": "2029-12-04", "residencyExpiry": "", "email": "", "studentID": "T3483633", "course": "Shiraz University of Medical Sciences", "domicile": "J&K", "dob": "1999-03-03", "batch": "", "source": "imported"}];
+
+        let students = JSON.parse(localStorage.getItem('shiraz_students')) || INITIAL_DATA;
+        let currentFilter = { search: '', domicile: '', status: '', batch: '' };
+
+        function saveData() {
+            localStorage.setItem('shiraz_students', JSON.stringify(students));
+        }
+
+        function showNotification(message, type) {
+            type = type || 'success';
+            const n = document.getElementById('notification');
+            n.textContent = message;
+            n.className = 'notification ' + type;
+            n.classList.add('show');
+            setTimeout(function() { n.classList.remove('show'); }, 3000);
+        }
+
+        function formatDate(d) {
+            if (!d) return '-';
+            var date = new Date(d);
+            return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        function getPassportStatus(expiry) {
+            if (!expiry) return { status: 'Unknown', className: 'badge-gray', days: null };
+            var today = new Date(); today.setHours(0,0,0,0);
+            var exp = new Date(expiry); exp.setHours(0,0,0,0);
+            var diff = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+            if (diff < 0) return { status: 'Expired', className: 'badge-expired', days: diff };
+            if (diff <= 180) return { status: 'Expiring Soon', className: 'badge-warning', days: diff };
+            return { status: 'Active', className: 'badge-active', days: diff };
+        }
+
+        function getResidencyStatus(expiry) {
+            if (!expiry) return { status: 'Not Set', className: 'badge-gray', days: null };
+            var today = new Date(); today.setHours(0,0,0,0);
+            var exp = new Date(expiry); exp.setHours(0,0,0,0);
+            var diff = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+            if (diff < 0) return { status: 'Expired', className: 'badge-expired', days: diff };
+            if (diff <= 90) return { status: 'Expiring Soon', className: 'badge-warning', days: diff };
+            return { status: 'Active', className: 'badge-active', days: diff };
+        }
+
+        function generateId() {
+            return 'STU-' + Date.now().toString(36).toUpperCase();
+        }
+
+        function switchMode(mode) {
+            var btns = document.querySelectorAll('.mode-btn');
+            for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+            var sections = document.querySelectorAll('.section');
+            for (var i = 0; i < sections.length; i++) sections[i].classList.remove('active');
+            document.getElementById('btn-' + mode).classList.add('active');
+            document.getElementById('section-' + mode).classList.add('active');
+            if (mode === 'admin') { renderStudents(); updateStats(); updateFilterOptions(); }
+        }
+
+        function switchBatchTab(tab) {
+            var tabs = document.querySelectorAll('.tab');
+            for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+            event.target.classList.add('active');
+            document.getElementById('batch-csv').style.display = tab === 'csv' ? 'block' : 'none';
+            document.getElementById('batch-table').style.display = tab === 'table' ? 'block' : 'none';
+        }
+
+        function updateStats() {
+            var today = new Date();
+            var active = 0, expiring = 0, expired = 0, residencySet = 0, batchSet = 0;
+            for (var i = 0; i < students.length; i++) {
+                var s = students[i];
+                var ps = getPassportStatus(s.passportExpiry);
+                if (ps.status === 'Active') active++;
+                else if (ps.status === 'Expiring Soon') expiring++;
+                else if (ps.status === 'Expired') expired++;
+                if (s.residencyExpiry) residencySet++;
+                if (s.batch) batchSet++;
+            }
+            document.getElementById('stat-total').textContent = students.length;
+            document.getElementById('stat-active').textContent = active;
+            document.getElementById('stat-expiring').textContent = expiring;
+            document.getElementById('stat-expired').textContent = expired;
+            document.getElementById('stat-residency').textContent = residencySet;
+            document.getElementById('stat-batch').textContent = batchSet;
+        }
+
+        function updateFilterOptions() {
+            var domiciles = [], batches = [];
+            var domSet = {}, batchSet = {};
+            for (var i = 0; i < students.length; i++) {
+                if (students[i].domicile) domSet[students[i].domicile] = true;
+                if (students[i].batch) batchSet[students[i].batch] = true;
+            }
+            for (var d in domSet) domiciles.push(d);
+            for (var b in batchSet) batches.push(b);
+            domiciles.sort(); batches.sort();
+
+            var domSelect = document.getElementById('filterDomicile');
+            var domHTML = '<option value="">All Domiciles</option>';
+            for (var i = 0; i < domiciles.length; i++) domHTML += '<option value="' + domiciles[i] + '">' + domiciles[i] + '</option>';
+            domSelect.innerHTML = domHTML;
+
+            var batchSelect = document.getElementById('filterBatch');
+            var batchHTML = '<option value="">All Batches</option>';
+            for (var i = 0; i < batches.length; i++) batchHTML += '<option value="' + batches[i] + '">' + batches[i] + '</option>';
+            batchSelect.innerHTML = batchHTML;
+        }
+
+        function renderStudents(data) {
+            data = data || students;
+            var container = document.getElementById('studentsTableContainer');
+            if (data.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><h3>No students found</h3><p>Try adjusting your search or filters</p></div>';
+                return;
+            }
+            var html = '<div class="table-wrapper"><table><thead><tr><th>#</th><th>Name</th><th>Passport</th><th>Mobile</th><th>Domicile</th><th>Passport Expiry</th><th>Passport Status</th><th>Residency Expiry</th><th>Residency Status</th><th>Batch</th><th>Actions</th></tr></thead><tbody>';
+            for (var i = 0; i < data.length; i++) {
+                var s = data[i];
+                var ps = getPassportStatus(s.passportExpiry);
+                var rs = getResidencyStatus(s.residencyExpiry);
+                var resDisplay = s.residencyExpiry ? formatDate(s.residencyExpiry) : '<span style="color:#999">Not set</span>';
+                var batchDisplay = s.batch ? '<span class="badge badge-info">' + s.batch + '</span>' : '<span style="color:#999">-</span>';
+                html += '<tr><td>' + (i + 1) + '</td><td><strong>' + s.name + '</strong></td><td><code>' + s.studentID + '</code></td><td>' + s.mobile + '</td><td>' + (s.domicile || '-') + '</td><td>' + formatDate(s.passportExpiry) + '</td><td><span class="badge ' + ps.className + '">' + ps.status + (ps.days !== null ? ' (' + ps.days + 'd)' : '') + '</span></td><td>' + resDisplay + '</td><td><span class="badge ' + rs.className + '">' + rs.status + (rs.days !== null ? ' (' + rs.days + 'd)' : '') + '</span></td><td>' + batchDisplay + '</td><td><div class="action-btns"><button class="btn btn-success btn-sm" onclick="editStudent(&quot;' + s.id + '&quot;)">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteStudent(&quot;' + s.id + '&quot;)">🗑️</button></div></td></tr>';
+            }
+            html += '</tbody></table></div><p style="margin-top:15px;color:var(--gray);font-size:0.9rem;">Showing ' + data.length + ' of ' + students.length + ' students</p>';
+            container.innerHTML = html;
+        }
+
+        function searchStudents() {
+            currentFilter.search = document.getElementById('searchInput').value.toLowerCase().trim();
+            applyFilters();
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterDomicile').value = '';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterBatch').value = '';
+            currentFilter = { search: '', domicile: '', status: '', batch: '' };
+            renderStudents();
+        }
+
+        function applyFilters() {
+            currentFilter.domicile = document.getElementById('filterDomicile').value;
+            currentFilter.status = document.getElementById('filterStatus').value;
+            currentFilter.batch = document.getElementById('filterBatch').value;
+            var filtered = [];
+            for (var i = 0; i < students.length; i++) {
+                var s = students[i];
+                var matchSearch = !currentFilter.search || 
+                    s.name.toLowerCase().indexOf(currentFilter.search) !== -1 ||
+                    s.mobile.indexOf(currentFilter.search) !== -1 ||
+                    s.studentID.toLowerCase().indexOf(currentFilter.search) !== -1 ||
+                    (s.domicile && s.domicile.toLowerCase().indexOf(currentFilter.search) !== -1) ||
+                    (s.batch && s.batch.toLowerCase().indexOf(currentFilter.search) !== -1);
+                var matchDomicile = !currentFilter.domicile || s.domicile === currentFilter.domicile;
+                var matchBatch = !currentFilter.batch || s.batch === currentFilter.batch;
+                var matchStatus = true;
+                if (currentFilter.status) {
+                    var ps = getPassportStatus(s.passportExpiry);
+                    if (currentFilter.status === 'active') matchStatus = ps.status === 'Active';
+                    else if (currentFilter.status === 'expiring') matchStatus = ps.status === 'Expiring Soon';
+                    else if (currentFilter.status === 'expired') matchStatus = ps.status === 'Expired';
+                    else if (currentFilter.status === 'no-residency') matchStatus = !s.residencyExpiry;
+                }
+                if (matchSearch && matchDomicile && matchStatus && matchBatch) filtered.push(s);
+            }
+            renderStudents(filtered);
+        }
+
+        function handleAddStudent(e) {
+            e.preventDefault();
+            var passport = document.getElementById('addPassport').value.trim().toUpperCase();
+            for (var i = 0; i < students.length; i++) {
+                if (students[i].studentID === passport) {
+                    showNotification('A student with this passport number already exists!', 'error');
+                    return;
+                }
+            }
+            var newStudent = {
+                id: generateId(),
+                name: document.getElementById('addName').value.trim(),
+                mobile: document.getElementById('addMobile').value.trim(),
+                studentID: passport,
+                passportExpiry: document.getElementById('addPassportExpiry').value,
+                residencyExpiry: document.getElementById('addResidencyExpiry').value,
+                dob: document.getElementById('addDOB').value,
+                email: document.getElementById('addEmail').value.trim(),
+                course: document.getElementById('addUniversity').value.trim(),
+                domicile: document.getElementById('addDomicile').value.trim(),
+                batch: document.getElementById('addBatch').value.trim(),
+                source: 'manual'
+            };
+            students.push(newStudent);
+            saveData();
+            e.target.reset();
+            document.getElementById('addUniversity').value = 'Shiraz University of Medical Sciences';
+            renderStudents();
+            updateStats();
+            updateFilterOptions();
+            showNotification('Student added successfully!');
+        }
+
+        function editStudent(id) {
+            var s = null;
+            for (var i = 0; i < students.length; i++) {
+                if (students[i].id === id) { s = students[i]; break; }
+            }
+            if (!s) return;
+            document.getElementById('editId').value = s.id;
+            document.getElementById('editName').value = s.name;
+            document.getElementById('editMobile').value = s.mobile;
+            document.getElementById('editPassport').value = s.studentID;
+            document.getElementById('editPassportExpiry').value = s.passportExpiry;
+            document.getElementById('editResidencyExpiry').value = s.residencyExpiry || '';
+            document.getElementById('editDOB').value = s.dob || '';
+            document.getElementById('editEmail').value = s.email || '';
+            document.getElementById('editUniversity').value = s.course || '';
+            document.getElementById('editDomicile').value = s.domicile || '';
+            document.getElementById('editBatch').value = s.batch || '';
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function handleEditStudent(e) {
+            e.preventDefault();
+            var id = document.getElementById('editId').value;
+            var idx = -1;
+            for (var i = 0; i < students.length; i++) {
+                if (students[i].id === id) { idx = i; break; }
+            }
+            if (idx === -1) return;
+            var passport = document.getElementById('editPassport').value.trim().toUpperCase();
+            var duplicate = false;
+            for (var i = 0; i < students.length; i++) {
+                if (students[i].studentID === passport && students[i].id !== id) { duplicate = true; break; }
+            }
+            if (duplicate) {
+                showNotification('Another student with this passport number exists!', 'error');
+                return;
+            }
+            students[idx] = {
+                id: students[idx].id,
+                name: document.getElementById('editName').value.trim(),
+                mobile: document.getElementById('editMobile').value.trim(),
+                studentID: passport,
+                passportExpiry: document.getElementById('editPassportExpiry').value,
+                residencyExpiry: document.getElementById('editResidencyExpiry').value,
+                dob: document.getElementById('editDOB').value,
+                email: document.getElementById('editEmail').value.trim(),
+                course: document.getElementById('editUniversity').value.trim(),
+                domicile: document.getElementById('editDomicile').value.trim(),
+                batch: document.getElementById('editBatch').value.trim(),
+                source: students[idx].source
+            };
+            saveData();
+            closeEditModal();
+            renderStudents();
+            updateStats();
+            updateFilterOptions();
+            showNotification('Record updated successfully!');
+        }
+
+        function deleteStudent(id) {
+            var s = null;
+            for (var i = 0; i < students.length; i++) {
+                if (students[i].id === id) { s = students[i]; break; }
+            }
+            if (!s) return;
+            if (confirm('Delete record for "' + s.name + '"? This cannot be undone.')) {
+                var newStudents = [];
+                for (var i = 0; i < students.length; i++) {
+                    if (students[i].id !== id) newStudents.push(students[i]);
+                }
+                students = newStudents;
+                saveData();
+                renderStudents();
+                updateStats();
+                updateFilterOptions();
+                showNotification('Record deleted successfully!');
+            }
+        }
+
+        function findStudentRecord() {
+            var query = document.getElementById('studentSearchInput').value.toLowerCase().trim();
+            if (!query) { showNotification('Please enter your name or passport number', 'error'); return; }
+            var matches = [];
+            for (var i = 0; i < students.length; i++) {
+                var s = students[i];
+                if (s.name.toLowerCase().indexOf(query) !== -1 || 
+                    s.studentID.toLowerCase().indexOf(query) !== -1 ||
+                    s.mobile.indexOf(query) !== -1) {
+                    matches.push(s);
+                }
+            }
+            var container = document.getElementById('studentSearchResults');
+            if (matches.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding:30px;"><div class="icon">🔍</div><h3>No record found</h3><p>We could not find your record. Please use the "New Student Registration" form below.</p></div>';
+                return;
+            }
+            var html = '<div class="card" style="margin-top:15px;"><div class="card-title"><span class="icon">👤</span> Found ' + matches.length + ' Record(s)</div><div class="table-wrapper"><table><thead><tr><th>Name</th><th>Passport</th><th>Mobile</th><th>Passport Expiry</th><th>Residency Expiry</th><th>Batch</th><th>Action</th></tr></thead><tbody>';
+            for (var i = 0; i < matches.length; i++) {
+                var s = matches[i];
+                var ps = getPassportStatus(s.passportExpiry);
+                var rs = getResidencyStatus(s.residencyExpiry);
+                html += '<tr><td><strong>' + s.name + '</strong></td><td>' + s.studentID + '</td><td>' + s.mobile + '</td><td>' + formatDate(s.passportExpiry) + ' <span class="badge ' + ps.className + '">' + ps.status + '</span></td><td>' + (formatDate(s.residencyExpiry) || '<span style="color:#999">Not set</span>') + ' ' + (s.residencyExpiry ? '<span class="badge ' + rs.className + '">' + rs.status + '</span>' : '') + '</td><td>' + (s.batch || '<span style="color:#999">-</span>') + '</td><td><button class="btn btn-success btn-sm" onclick="openUpdateModal(&quot;' + s.id + '&quot;)">✏️ Update</button></td></tr>';
+            }
+            html += '</tbody></table></div></div>';
+            container.innerHTML = html;
+        }
+
+        function openUpdateModal(id) {
+            var s = null;
+            for (var i = 0; i < students.length; i++) {
+                if (students[i].id === id) { s = students[i]; break; }
+            }
+            if (!s) return;
+            document.getElementById('updateId').value = s.id;
+            document.getElementById('updateDisplayName').textContent = s.name;
+            document.getElementById('updateDisplayPassport').textContent = s.studentID;
+            document.getElementById('updateResidencyExpiry').value = s.residencyExpiry || '';
+            document.getElementById('updateBatch').value = s.batch || '';
+            document.getElementById('updateMobile').value = s.mobile;
+            document.getElementById('updateEmail').value = s.email || '';
+            document.getElementById('updateModal').classList.add('active');
+        }
+
+        function closeUpdateModal() {
+            document.getElementById('updateModal').classList.remove('active');
+        }
+
+        function handleStudentUpdate(e) {
+            e.preventDefault();
+            var id = document.getElementById('updateId').value;
+            var idx = -1;
+            for (var i = 0; i < students.length; i++) {
+                if (students[i].id === id) { idx = i; break; }
+            }
+            if (idx === -1) return;
+            students[idx] = {
+                id: students[idx].id,
+                name: students[idx].name,
+                mobile: document.getElementById('updateMobile').value.trim(),
+                studentID: students[idx].studentID,
+                passportExpiry: students[idx].passportExpiry,
+                residencyExpiry: document.getElementById('updateResidencyExpiry').value,
+                dob: students[idx].dob,
+                email: document.getElementById('updateEmail').value.trim(),
+                course: students[idx].course,
+                domicile: students[idx].domicile,
+                batch: document.getElementById('updateBatch').value.trim(),
+                source: students[idx].source
+            };
+            saveData();
+            closeUpdateModal();
+            findStudentRecord();
+            showNotification('Your information has been updated successfully!');
+        }
+
+        function handleSelfRegister(e) {
+            e.preventDefault();
+            var passport = document.getElementById('selfPassport').value.trim().toUpperCase();
+            for (var i = 0; i < students.length; i++) {
+                if (students[i].studentID === passport) {
+                    showNotification('A student with this passport already exists! Use "Find Your Record" to update.', 'error');
+                    return;
+                }
+            }
+            var newStudent = {
+                id: generateId(),
+                name: document.getElementById('selfName').value.trim(),
+                mobile: document.getElementById('selfMobile').value.trim(),
+                studentID: passport,
+                passportExpiry: document.getElementById('selfPassportExpiry').value,
+                residencyExpiry: document.getElementById('selfResidencyExpiry').value,
+                dob: document.getElementById('selfDOB').value,
+                email: document.getElementById('selfEmail').value.trim(),
+                course: 'Shiraz University of Medical Sciences',
+                domicile: document.getElementById('selfDomicile').value.trim(),
+                batch: document.getElementById('selfBatch').value.trim(),
+                source: 'self-registered'
+            };
+            students.push(newStudent);
+            saveData();
+            e.target.reset();
+            showNotification('Registration successful! Your information has been saved.');
+        }
+
+        function previewBatch() {
+            var csvContent = document.getElementById('batchCSV').value.trim();
+            var tableContent = document.getElementById('batchTable').value.trim();
+            var content = csvContent || tableContent;
+            if (!content) { showNotification('Please paste some data first', 'error'); return; }
+            var lines = content.split('\n');
+            var parsed = [];
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].trim();
+                if (!line) continue;
+                if (i === 0 && (line.toLowerCase().indexOf('name') !== -1 || line.toLowerCase().indexOf('mobile') !== -1)) continue;
+                var parts = line.indexOf('\t') !== -1 ? line.split('\t') : line.split(',');
+                if (parts.length >= 4) {
+                    parsed.push({
+                        name: (parts[0] || '').trim(),
+                        mobile: (parts[1] || '').trim(),
+                        studentID: (parts[2] || '').trim().toUpperCase(),
+                        passportExpiry: (parts[3] || '').trim(),
+                        residencyExpiry: (parts[4] || '').trim(),
+                        dob: (parts[5] || '').trim(),
+                        domicile: (parts[6] || '').trim(),
+                        batch: (parts[7] || '').trim()
+                    });
+                }
+            }
+            var preview = document.getElementById('batchPreview');
+            if (parsed.length === 0) {
+                preview.innerHTML = '<p style="color:red;">Could not parse any valid records. Please check your format.</p>';
+                return;
+            }
+            var html = '<div class="card" style="margin-top:15px;"><div class="card-title"><span class="icon">👁️</span> Preview (' + parsed.length + ' records)</div><div class="table-wrapper"><table><thead><tr><th>Name</th><th>Mobile</th><th>Passport</th><th>Passport Expiry</th><th>Residency Expiry</th><th>Batch</th></tr></thead><tbody>';
+            for (var i = 0; i < parsed.length; i++) {
+                var p = parsed[i];
+                html += '<tr><td>' + p.name + '</td><td>' + p.mobile + '</td><td>' + p.studentID + '</td><td>' + p.passportExpiry + '</td><td>' + (p.residencyExpiry || '-') + '</td><td>' + (p.batch || '-') + '</td></tr>';
+            }
+            html += '</tbody></table></div><p style="margin-top:10px;color:var(--gray);">Click "Import All" to add these records.</p></div>';
+            preview.innerHTML = html;
+            preview.dataset.parsed = JSON.stringify(parsed);
+        }
+
+        function importBatch() {
+            var preview = document.getElementById('batchPreview');
+            var parsedData = preview.dataset.parsed;
+            if (!parsedData) { showNotification('Please preview the data first', 'error'); return; }
+            var parsed = JSON.parse(parsedData);
+            var added = 0, skipped = 0;
+            for (var i = 0; i < parsed.length; i++) {
+                var p = parsed[i];
+                if (!p.name || !p.studentID) { skipped++; continue; }
+                var exists = false;
+                for (var j = 0; j < students.length; j++) {
+                    if (students[j].studentID === p.studentID) { exists = true; break; }
+                }
+                if (exists) { skipped++; continue; }
+                students.push({
+                    id: generateId(),
+                    name: p.name,
+                    mobile: p.mobile || '',
+                    studentID: p.studentID,
+                    passportExpiry: p.passportExpiry,
+                    residencyExpiry: p.residencyExpiry,
+                    dob: p.dob,
+                    email: '',
+                    course: 'Shiraz University of Medical Sciences',
+                    domicile: p.domicile,
+                    batch: p.batch,
+                    source: 'batch'
+                });
+                added++;
+            }
+            saveData();
+            clearBatch();
+            showNotification('Imported ' + added + ' records. ' + (skipped > 0 ? skipped + ' skipped (duplicates/invalid).' : ''));
+            if (document.getElementById('section-admin').classList.contains('active')) {
+                renderStudents(); updateStats(); updateFilterOptions();
+            }
+        }
+
+        function clearBatch() {
+            document.getElementById('batchCSV').value = '';
+            document.getElementById('batchTable').value = '';
+            document.getElementById('batchPreview').innerHTML = '';
+            delete document.getElementById('batchPreview').dataset.parsed;
+        }
+
+        function exportToCSV() {
+            if (students.length === 0) { showNotification('No data to export', 'error'); return; }
+            var headers = ['Name', 'Passport', 'Mobile', 'Email', 'DOB', 'Domicile', 'Passport Expiry', 'Residency Expiry', 'Passport Status', 'Residency Status', 'Batch', 'University'];
+            var csvLines = [headers.join(',')];
+            for (var i = 0; i < students.length; i++) {
+                var s = students[i];
+                var ps = getPassportStatus(s.passportExpiry);
+                var rs = getResidencyStatus(s.residencyExpiry);
+                var row = [
+                    '"' + (s.name || '') + '"',
+                    '"' + (s.studentID || '') + '"',
+                    '"' + (s.mobile || '') + '"',
+                    '"' + (s.email || '') + '"',
+                    '"' + (s.dob || '') + '"',
+                    '"' + (s.domicile || '') + '"',
+                    '"' + (s.passportExpiry || '') + '"',
+                    '"' + (s.residencyExpiry || '') + '"',
+                    '"' + ps.status + '"',
+                    '"' + rs.status + '"',
+                    '"' + (s.batch || '') + '"',
+                    '"' + (s.course || '') + '"'
+                ];
+                csvLines.push(row.join(','));
+            }
+            var csv = csvLines.join('\n');
+            var blob = new Blob([csv], { type: 'text/csv' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'shiraz_students_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('CSV exported successfully!');
+        }
+
+        function clearAllData() {
+            if (students.length === 0) { showNotification('No data to clear', 'error'); return; }
+            if (confirm('WARNING: This will delete ALL student records! This cannot be undone.')) {
+                if (confirm('Are you absolutely sure? All ' + students.length + ' records will be permanently deleted.')) {
+                    students = [];
+                    saveData();
+                    renderStudents();
+                    updateStats();
+                    updateFilterOptions();
+                    showNotification('All data cleared.');
+                }
+            }
+        }
+
+        document.getElementById('editModal').addEventListener('click', function(e) { if (e.target === this) closeEditModal(); });
+        document.getElementById('updateModal').addEventListener('click', function(e) { if (e.target === this) closeUpdateModal(); });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderStudents();
+            updateStats();
+            updateFilterOptions();
+        });
+    </script>
+</body>
+</html>
